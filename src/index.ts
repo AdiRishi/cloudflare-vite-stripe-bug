@@ -1,18 +1,34 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import Stripe from 'stripe';
+
+interface Env {
+	STRIPE_API_KEY: string;
+}
+
+async function handleStripeTest(env: Env): Promise<Response> {
+	const stripe = new Stripe(env.STRIPE_API_KEY || 'my-api-key');
+	const customer = await stripe.customers.create({
+		email: 'example@example.com',
+		name: 'Example Customer',
+	});
+
+	return new Response(JSON.stringify({ customer }), {
+		headers: { 'Content-Type': 'application/json' },
+	});
+}
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		const rootPattern = new URLPattern({ pathname: '/' });
+		const stripeTestPattern = new URLPattern({ pathname: '/stripe-test' });
+
+		const url = new URL(request.url);
+
+		if (rootPattern.test(url)) {
+			return new Response('Hello World!');
+		} else if (stripeTestPattern.test(url)) {
+			return handleStripeTest(env);
+		}
+
+		return new Response('Not found', { status: 404 });
 	},
-} satisfies ExportedHandler<Env>;
+} as ExportedHandler<Env>;

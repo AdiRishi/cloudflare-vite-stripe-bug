@@ -18,5 +18,8 @@
 		"vitest": "~3.0.9",
 		"wrangler": "^4.5.0"
 	},
-	"packageManager": "pnpm@10.7.0"
+	"packageManager": "pnpm@10.7.0",
+	"dependencies": {
+		"stripe": "^17.7.0"
+	}
 }
